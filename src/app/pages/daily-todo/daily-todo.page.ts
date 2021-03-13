@@ -9,6 +9,8 @@ import { ActionSheetController, AlertController, ToastController } from '@ionic/
 export class DailyTodoPage implements OnInit {
 
   tasks : any[] = [];
+  totalTasks : number = 0;
+  doneTasks : number = 0;
 
   constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController) {
     let taskJson = localStorage.getItem('taskDb');
@@ -68,8 +70,8 @@ export class DailyTodoPage implements OnInit {
         {
           text: 'Adicionar',
           handler: (form => {
-
             this.add(form.newTask, form.taskStart, form.taskFinal, form.taskTimer, form.restTimer);
+            this.totalTasks++;
           })
         }
       ]
@@ -93,12 +95,15 @@ export class DailyTodoPage implements OnInit {
     let task = { name : newTask, status: 'doing', timer: 0, open: false, taskStart, taskFinal, taskTimer, restTimer };
 
     this.tasks.push(task);
-
     this.updateLocalStorage();
   } 
 
   updateLocalStorage() {
     localStorage.setItem('taskDb', JSON.stringify(this.tasks));
+    if (!this.tasks) {
+      this.totalTasks = 0;
+      this.doneTasks = 0;
+    }
   }
 
   async onClick(task : any) {
@@ -116,7 +121,6 @@ export class DailyTodoPage implements OnInit {
     } else if (task.status === 'doing') {
       task.status = 'pause';
     }
-
   }
 
   startTimer() {
@@ -155,6 +159,8 @@ export class DailyTodoPage implements OnInit {
   deleteTask(task : any) {
     this.tasks = this.tasks.filter(taskArray => task != taskArray);
     this.updateLocalStorage();
+    if(this.totalTasks > 0) { this.totalTasks-- }
+    if(task.status==='done') { this.doneTasks-- }
   }
 
   updateTask(task) {
@@ -162,22 +168,12 @@ export class DailyTodoPage implements OnInit {
   }
 
   handleEventTask(event, task) {
-    console.log(event.action);
-    console.log(task);
     if(event.action === 'done') {
       task.status = 'done';
+      this.doneTasks++;
     } else {
       task.status === 'doing'
     }
-  }
-
-
-  
-  handleEventRest(event, task) {
-
-    console.log(event);
-    event.action = 'pause';
-
   }
 
 }

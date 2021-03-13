@@ -4,23 +4,26 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>ToDo Diário</ion-title>
+    <ion-toggle slot="end"></ion-toggle>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
 
   <ion-list>
-    <p>Tasks para todos os dias</p>
+    <p>Tasks Diárias {{doneTasks}}/{{totalTasks}}</p>
   </ion-list>
   <ion-list *ngFor="let task of tasks" class="animate__animated animate__bounceInRight">
     <ion-item-sliding >
-      <ion-item (click)="onClick(task); countTask.resume(); countRest.pause()">
+      <ion-item (click)="onClick(task); countTask.resume(); countRest.pause()" *ngIf="task.status!== 'done'">
         <ion-label *ngIf="!task.open && task.status !== 'done'"><strong>{{task.name}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
         <ion-label *ngIf="task.open && task.status !== 'done'"><strong>{{task.name}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
-        <ion-label *ngIf="task.status === 'done'"><del>{{task.name}}</del></ion-label>
         <ion-icon slot="start" name="caret-forward" *ngIf="!task.open && task.status !== 'done'"></ion-icon>
         <ion-icon slot="start" name="caret-down" *ngIf="task.open && task.status !== 'done'"></ion-icon>
-        <ion-icon slot="start" name="checkmark-circle" color="success" *ngIf="task.status == 'done'"></ion-icon>
+      </ion-item>
+      <ion-item *ngIf="task.status === 'done'">
+        <ion-label><del>{{task.name}}</del></ion-label>
+        <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
       </ion-item>
       <ion-item-options side="end">
         <ion-item-option (click)="taskOption(task)" color="primary">Opções</ion-item-option>
@@ -38,7 +41,7 @@
           <ion-col>
             <div>
               <p>Descanso</p>
-              <ion-label *ngIf="task.status==='pause'"><countdown #countRest [config]="{leftTime: task.restTimer}"  (event)="handleEventRest($event, task)"></countdown></ion-label>
+              <ion-label *ngIf="task.status==='pause'"><countdown #countRest [config]="{leftTime: task.restTimer}" ></countdown></ion-label>
             </div>
           </ion-col>
         </ion-row>
