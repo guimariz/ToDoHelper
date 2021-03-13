@@ -90,7 +90,7 @@ export class DailyTodoPage implements OnInit {
       return;
     }
 
-    let task = { name : newTask, status: 'play', timer: 0, open: false, taskStart, taskFinal, taskTimer, restTimer };
+    let task = { name : newTask, status: 'doing', timer: 0, open: false, taskStart, taskFinal, taskTimer, restTimer };
 
     this.tasks.push(task);
 
@@ -105,18 +105,17 @@ export class DailyTodoPage implements OnInit {
 
     task.open = !task.open;
 
+    task.status = 'doing';
 
     this.updateLocalStorage();
   }
   
   onTimerClick(task : any) {
     if(task.status === 'pause') { 
-      task.status = 'doing'
+      task.status = 'doing';
     } else if (task.status === 'doing') {
-      task.status = 'pause'
+      task.status = 'pause';
     }
-    else { task.status = 'done' };
-    console.log(task.status);
 
   }
 
@@ -162,11 +161,19 @@ export class DailyTodoPage implements OnInit {
     console.log('editando');
   }
 
-  handleEventTask(event) {
-    console.log(event);
+  handleEventTask(event, task) {
+    console.log(event.action);
+    console.log(task);
+    if(event.action === 'done') {
+      task.status = 'done';
+    } else {
+      task.status === 'doing'
+    }
   }
+
+
   
-  handleEventRest(event) {
+  handleEventRest(event, task) {
 
     console.log(event);
     event.action = 'pause';
