@@ -15,7 +15,7 @@ import { DailyTodoPage } from './daily-todo.page';
     FormsModule,
     IonicModule,
     DailyTodoPageRoutingModule,
-    CountdownModule
+    CountdownModule,
   ],
   declarations: [DailyTodoPage]
 })

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActionSheetController, AlertController, ToastController } from '@ionic/angular';
+import { TodoService } from 'src/app/services/todo.service';
 
 @Component({
   selector: 'app-daily-todo',
@@ -8,11 +9,14 @@ import { ActionSheetController, AlertController, ToastController } from '@ionic/
 })
 export class DailyTodoPage implements OnInit {
 
+  autoToggle : boolean = true;
+  isAuto : boolean = true;
   tasks : any[] = [];
   totalTasks : number = 0;
   doneTasks : number = 0;
+  isRest : boolean = false;
 
-  constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController) {
+  constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController, private todoService : TodoService) {
     let taskJson = localStorage.getItem('taskDb');
 
     if (taskJson) {
@@ -23,24 +27,28 @@ export class DailyTodoPage implements OnInit {
   ngOnInit() {
   }
 
+  autoChange(event) {
+    event === true ? this.isAuto = false : this.isAuto = true;
+  }
+
   async showAdd(){
     const alert = await this.alertCtrl.create({
       header: 'Adicionar uma task',
       inputs: [
         {
-          name: 'newTask',
+          name: 'taskName',
           type: 'text',
           placeholder: 'Nome da task'
         },
         {
           name: 'taskStart',
-          type: 'number',
+          type: 'time',
           placeholder: 'Horário de Início',
           min: 0,
         },
         {
           name: 'taskFinal',
-          type: 'number',
+          type: 'time',
           placeholder: 'Horário final',
           min: 0,
         },
@@ -70,7 +78,7 @@ export class DailyTodoPage implements OnInit {
         {
           text: 'Adicionar',
           handler: (form => {
-            this.add(form.newTask, form.taskStart, form.taskFinal, form.taskTimer, form.restTimer);
+            this.add(form.taskName, form.taskStart, form.taskFinal, form.taskTimer, form.restTimer);
             this.totalTasks++;
           })
         }
@@ -79,9 +87,9 @@ export class DailyTodoPage implements OnInit {
     await alert.present();
   }
 
-  async add(newTask : string, taskStart : number, taskFinal : number, taskTimer : number, restTimer : number) {
+  async add(taskName : string, taskStart : string , taskFinal : string, taskTimer : number, restTimer : number) {
     //validar se o usuário preencheu
-    if (newTask.trim().length < 1) {
+    if (taskName.trim().length < 1) {
       const toast = await this.toastCtrl.create({
         message : 'Informe o que deseja fazer',
         duration : 2000,
@@ -92,10 +100,25 @@ export class DailyTodoPage implements OnInit {
       return;
     }
 
-    let task = { name : newTask, status: 'doing', timer: 0, open: false, taskStart, taskFinal, taskTimer, restTimer };
+    let task = { taskName, status: 'pause', open: false, taskStart, taskFinal, taskTimer, restTimer };
 
     this.tasks.push(task);
-    this.updateLocalStorage();
+
+    this.todoService.add(task)
+      .then(async (res) => {
+        console.log(res);
+        const toast = await this.toastCtrl.create({
+          message : 'Task adicionada com sucesso!',
+          duration : 2000,
+          position : 'top',
+        });
+
+        toast.present();
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+    // this.updateLocalStorage();
   } 
 
   updateLocalStorage() {
@@ -111,6 +134,7 @@ export class DailyTodoPage implements OnInit {
     task.open = !task.open;
 
     task.status = 'doing';
+    this.isRest = false;
 
     this.updateLocalStorage();
   }
@@ -118,8 +142,10 @@ export class DailyTodoPage implements OnInit {
   onTimerClick(task : any) {
     if(task.status === 'pause') { 
       task.status = 'doing';
+      this.isRest = false;
     } else if (task.status === 'doing') {
       task.status = 'pause';
+      this.isRest = true;
     }
   }
 
@@ -160,7 +186,7 @@ export class DailyTodoPage implements OnInit {
     this.tasks = this.tasks.filter(taskArray => task != taskArray);
     this.updateLocalStorage();
     if(this.totalTasks > 0) { this.totalTasks-- }
-    if(task.status==='done') { this.doneTasks-- }
+    if(task.status==='done') { this.doneTasks++ }
   }
 
   updateTask(task) {
@@ -172,8 +198,15 @@ export class DailyTodoPage implements OnInit {
       task.status = 'done';
       this.doneTasks++;
     } else {
-      task.status === 'doing'
+      task.status = 'doing'
     }
   }
 
+  handleEventRest(event, task) {
+    console.log(event);
+    if(event.action === 'done') {
+      this.isRest = false;
+      task.status = 'doing'; 
+    }
+  }
 }
