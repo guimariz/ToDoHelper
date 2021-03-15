@@ -12,33 +12,36 @@
 
   <ion-list>
     <p>Tasks Diárias {{doneTasks}}/{{totalTasks}}</p>
+    
   </ion-list>
   <ion-item *ngIf="tasks.length < 1">
     <ion-label>Não há tasks</ion-label>
   </ion-item>
   <ion-list *ngFor="let task of tasks" class="animate__animated animate__bounceInRight">
     <ion-item-sliding >
-      <ion-item (click)="onClick(task); countTask.resume(); countRest.pause()" *ngIf="task.status!== 'done'">
-        <ion-label *ngIf="!task.open && task.status !== 'done'"><strong>{{task.name}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
-        <ion-label *ngIf="task.open && task.status !== 'done'"><strong>{{task.name}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
-        <ion-icon slot="start" name="caret-forward" *ngIf="!task.open && task.status !== 'done'"></ion-icon>
-        <ion-icon slot="start" name="caret-down" *ngIf="task.open && task.status !== 'done'"></ion-icon>
+      <ion-item (click)="onClick(task); countTask.resume(); countRest.pause();" *ngIf="task.status!== 'done'">
+        <ion-label *ngIf="!task.open && task.status !== 'done'"><strong>{{task.taskName}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
+        <ion-label *ngIf="task.open && task.status !== 'done'"><strong>{{task.taskName}}</strong> <br> <p>{{task.taskStart}} até {{task.taskFinal}}</p></ion-label>
+        <ion-icon slot="start" name="caret-forward" *ngIf="!task.open && task.status !== 'done' && task.isReady"></ion-icon>
+        <ion-icon slot="start" name="caret-down" *ngIf="task.open && task.status !== 'done' && task.isReady"></ion-icon>
+        <ion-icon slot="start" name="close" *ngIf="!task.open && task.status !== 'done' && !task.isReady"></ion-icon>
+        <ion-icon slot="start" name="close" *ngIf="task.open && task.status !== 'done' && !task.isReady"></ion-icon>
       </ion-item>
       <ion-item-options side="end">
         <ion-item-option (click)="taskOption(task)" color="primary">Opções</ion-item-option>
       </ion-item-options>
     </ion-item-sliding>
     <ion-item *ngIf="task.status === 'done'">
-      <ion-label><del>{{task.name}}</del></ion-label>
+      <ion-label><del>{{task.taskName}}</del></ion-label>
       <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
     </ion-item>
-    <ion-item *ngIf="task.open && task.status !== 'done'">
+    <ion-item *ngIf="task.open && task.status !== 'done' && task.isReady">
       <ion-grid>
         <ion-row>
           <ion-col>
             <div>
               <p>Execução</p>
-              <ion-label *ngIf="task.status==='doing' || !isRest "><countdown #countTask [config]="{leftTime: task.taskTimer}" (event)="handleEventTask($event, task)"></countdown></ion-label>
+              <ion-label *ngIf="task.status==='doing'"><countdown #countTask [config]="{leftTime: task.taskTimer}" (event)="handleEventTask($event, task)"></countdown></ion-label>
             </div>
           </ion-col>
           <ion-col>
