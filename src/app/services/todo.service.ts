@@ -9,7 +9,7 @@ export class TodoService {
   constructor(private http: HttpClient) { }
 
   add(task: any) {
-    let url = 'http://127.0.0.1:8080/tasks';
+    let url = 'http://127.0.0.1:8080/tasks/';
 
     let header = {
       headers: new HttpHeaders()

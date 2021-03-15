@@ -36,7 +36,6 @@ export class DailyTodoPage implements OnInit {
       this.tasks = res;
       this.totalTasks = res.length;
       this.showDoneTasks();
-      if (this.totalTasks > 0) { this.validateTask(res) }
     })
     .catch(async (err) => {
       console.error(err);
@@ -112,7 +111,8 @@ export class DailyTodoPage implements OnInit {
   
   async add(taskName : string, taskStart : string , taskFinal : string, taskTimer : number, restTimer : number) {
     //validar se o usuário preencheu
-    if (taskName.trim().length < 1) {
+    console.log(taskName);
+    if (!taskName.trim().length) {
       const toast = await this.toastCtrl.create({
         message : 'Informe o que deseja fazer',
         duration : 2000,
@@ -125,13 +125,11 @@ export class DailyTodoPage implements OnInit {
     
     let task = { taskName, status: 'pause', open: false, taskStart, taskFinal, taskTimer, restTimer, isReady: true };
     
-    this.tasks.push(task);
-    
-    this.validateTask(task);
-    
     this.todoService.add(task)
     .then(async (res) => {
       console.log('Task adicionada');
+      this.tasks.push(res);
+      this.validateTask(res);
       const toast = await this.toastCtrl.create({
         message : 'Task adicionada com sucesso!',
         duration : 2000,
@@ -160,28 +158,19 @@ export class DailyTodoPage implements OnInit {
     let h2 = task.taskStart.split(":");
     let h3 = task.taskFinal.split(":");
 
-    console.log(h2);
-    console.log(h3);
-
     let d = new Date();
 
     let data1 = new Date();
     let data2 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h2[0], h2[1]);
     let data3 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h3[0], h3[1]);
 
-    console.log(data1)
-    console.log(data2)
-    console.log(data3)
-
-    if (data1 >= data2 && data1 <= data3) {
-      task.isReady = true;
-    } else {
-      task.isReady = false;
-    }
+    task.isReady = data1 >= data2 && data1 <= data3;
 
     this.todoService.update(task)
     .then((res) => { console.log('isReady atualizado') })
-    .catch((err) => { console.log(err) });
+    .catch((err) => { 
+      console.log(err)
+     });
 
   }
   // updateLocalStorage() {
@@ -205,7 +194,9 @@ export class DailyTodoPage implements OnInit {
     // this.updateLocalStorage();
     this.todoService.update(task)
     .then((res) => { console.log('Status atualizado') })
-    .catch((err) => { console.log(err) });
+    .catch((err) => { 
+      console.log(err) 
+    });
     
   }
   
@@ -219,7 +210,10 @@ export class DailyTodoPage implements OnInit {
     }
     this.todoService.update(task)
     .then((res) => { console.log('Status atualizado') })
-    .catch((err) => { console.log(err) });
+    .catch((err) => { 
+      
+      console.log(err) 
+    });
   }
 
   startTimer() {
@@ -255,6 +249,7 @@ export class DailyTodoPage implements OnInit {
         })
         .catch(async (err) => {
           console.error(err);
+          
           const toast = await this.toastCtrl.create({
             message : 'Algo deu errado ao editar a task!',
             duration : 2000,
@@ -306,57 +301,73 @@ export class DailyTodoPage implements OnInit {
 
   async handleEventTask(event, task) {
 
-      if(event.action === 'done' && !task.isReady) {
-        task.status = 'done';
-        const toast = await this.toastCtrl.create({
-          message : 'Parabéns, você concluiu a task!',
-          duration : 2000,
-          position : 'top',
-        });
-        this.todoService.update(task)
-        .then((res) => { 
-          this.showDoneTasks();
-          console.log('Execução finalizada');
-        })
-        .catch((err) => { console.log(err) });
-        
-        toast.present();
-        
-      } else if (event.action ==='done' && task.isReady) {
-        this.isRest = true;
-        task.status = 'pause';
-      } 
-      else {
-        task.status = 'doing';
-      }
+    this.validateTask(task);
+
+    if(event.action === 'done' && !task.isReady) {
+      task.status = 'done';
+      const toast = await this.toastCtrl.create({
+        message : 'Parabéns, você concluiu a task!',
+        duration : 2000,
+        position : 'top',
+      });
       this.todoService.update(task)
-        .then((res) => { console.log('Descanso finalizado') })
-        .catch((err) => { console.log(err) });
+      .then((res) => { 
+        this.showDoneTasks();
+        console.log('Execução finalizada');
+      })
+      .catch((err) => { 
+        
+        console.log(err)
+        });
+      
+      toast.present();
+      
+    } else if (event.action ==='done' && task.isReady) {
+      this.isRest = true;
+      task.status = 'pause';
+    } 
+    else {
+      task.status = 'doing';
+    }
+    this.todoService.update(task)
+    .then((res) => { console.log('Descanso finalizado') })
+    .catch((err) => { 
+      
+      console.log(err) 
+    });
   }
 
   async handleEventRest(event, task) {
+
+    this.validateTask(task);
+    
     if(event.action === 'done' && !task.isReady) {
+      
       task.status = 'done';
-        const toast = await this.toastCtrl.create({
-          message : 'Parabéns, você concluiu a task!',
-          duration : 2000,
-          position : 'top',
-        });
-        this.todoService.update(task)
-        .then((res) => { 
-          this.showDoneTasks();
-          console.log('Execução finalizada');
-        })
-        .catch((err) => { console.log(err) });
-        
-        toast.present();
+      const toast = await this.toastCtrl.create({
+        message : 'Parabéns, você concluiu a task!',
+        duration : 2000,
+        position : 'top',
+      });
+      this.todoService.update(task)
+      .then((res) => { 
+        this.showDoneTasks();
+        console.log('Execução finalizada');
+      })
+      .catch((err) => { console.log(err) });
+      
+      toast.present();
     } else if (event.action ==='done' && task.isReady) {
+      
       this.isRest = false;
       task.status = 'doing';
     }
     this.todoService.update(task)
-      .then((res) => { console.log('Descanso finalizado') })
-      .catch((err) => { console.log(err) });
+    .then((res) => { console.log('Descanso finalizado') })
+    .catch((err) => { 
+      console.log(err) 
+      
+    });
   }
 
   // msToTime(duration) {
