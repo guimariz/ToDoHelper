@@ -305,35 +305,58 @@ export class DailyTodoPage implements OnInit {
   }
 
   async handleEventTask(event, task) {
-    if(event.action === 'done') {
-      task.status = 'done';
-      const toast = await this.toastCtrl.create({
-        message : 'Parabéns, você concluiu a task!',
-        duration : 2000,
-        position : 'top',
-      });
-      this.todoService.update(task)
-      .then((res) => { 
-        this.showDoneTasks();
-        console.log('Execução finalizada');
-      })
-      .catch((err) => { console.log(err) });
 
-      toast.present();
-      
-    } else {
-      task.status = 'doing';
-    }
+      if(event.action === 'done' && !task.isReady) {
+        task.status = 'done';
+        const toast = await this.toastCtrl.create({
+          message : 'Parabéns, você concluiu a task!',
+          duration : 2000,
+          position : 'top',
+        });
+        this.todoService.update(task)
+        .then((res) => { 
+          this.showDoneTasks();
+          console.log('Execução finalizada');
+        })
+        .catch((err) => { console.log(err) });
+        
+        toast.present();
+        
+      } else if (event.action ==='done' && task.isReady) {
+        this.isRest = true;
+        task.status = 'pause';
+      } 
+      else {
+        task.status = 'doing';
+      }
+      this.todoService.update(task)
+        .then((res) => { console.log('Descanso finalizado') })
+        .catch((err) => { console.log(err) });
   }
 
-  handleEventRest(event, task) {
-    if(event.action === 'done') {
+  async handleEventRest(event, task) {
+    if(event.action === 'done' && !task.isReady) {
+      task.status = 'done';
+        const toast = await this.toastCtrl.create({
+          message : 'Parabéns, você concluiu a task!',
+          duration : 2000,
+          position : 'top',
+        });
+        this.todoService.update(task)
+        .then((res) => { 
+          this.showDoneTasks();
+          console.log('Execução finalizada');
+        })
+        .catch((err) => { console.log(err) });
+        
+        toast.present();
+    } else if (event.action ==='done' && task.isReady) {
       this.isRest = false;
       task.status = 'doing';
     }
     this.todoService.update(task)
-    .then((res) => { console.log('Descanso finalizado') })
-    .catch((err) => { console.log(err) });
+      .then((res) => { console.log('Descanso finalizado') })
+      .catch((err) => { console.log(err) });
   }
 
   // msToTime(duration) {
