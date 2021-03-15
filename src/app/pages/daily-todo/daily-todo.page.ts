@@ -16,7 +16,7 @@ export class DailyTodoPage implements OnInit {
   totalTasks : number = 0;
   doneTasks : number = 0;
   isRest : boolean = false;
-  now : string;
+  click : boolean = false;
 
   constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController, private todoService : TodoService) {
     // let taskJson = localStorage.getItem('taskDb');
@@ -301,6 +301,8 @@ export class DailyTodoPage implements OnInit {
 
   async handleEventTask(event, task) {
 
+    console.log(event);
+
     this.validateTask(task);
 
     if(event.action === 'done' && !task.isReady) {
@@ -370,17 +372,25 @@ export class DailyTodoPage implements OnInit {
     });
   }
 
-  // msToTime(duration) {
-  //   let milliseconds = parseInt((duration % 1000) / 100),
-  //     seconds = Math.floor((duration / 1000) % 60),
-  //     minutes = Math.floor((duration / (1000 * 60)) % 60),
-  //     hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
-  
-  //   hours = (hours < 10) ? "0" + hours : hours;
-  //   minutes = (minutes < 10) ? "0" + minutes : minutes;
-  //   seconds = (seconds < 10) ? "0" + seconds : seconds;
-  
-  //   return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
-  // }
+  resetTasks() {
+
+    this.click = !this.click;
+    console.log(this.click);
+
+    let d = new Date();
+
+    let resetTime = '06:00'
+    let r = resetTime.split(":").toString;
+
+    let data1 = new Date;
+    let data2 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), r[0], r[1]);
+
+    if (data1 === data2) { 
+      this.todoService.resetTasks()
+      .then((res) => { console.log(res) })
+      .catch((err) => { console.error(err) });
+    }
+
+  }
 
 }

@@ -60,4 +60,15 @@ export class TodoService {
     return this.http.get(url).toPromise();
   }
 
+  resetTasks() {
+    let url = 'http://127.0.0.1:8080/tasks/all';
+
+    let header = {
+      headers: new HttpHeaders()
+        .set('Content-Type', 'application/json')
+    }
+
+    return this.http.put(url, header).toPromise();
+  }
+
 }
