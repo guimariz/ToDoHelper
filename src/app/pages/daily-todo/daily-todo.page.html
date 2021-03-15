@@ -38,7 +38,7 @@
           <ion-col>
             <div>
               <p>Execução</p>
-              <ion-label *ngIf="task.status==='doing' "><countdown #countTask [config]="{leftTime: task.taskTimer}" (event)="handleEventTask($event, task)"></countdown></ion-label>
+              <ion-label *ngIf="task.status==='doing' || !isRest "><countdown #countTask [config]="{leftTime: task.taskTimer}" (event)="handleEventTask($event, task)"></countdown></ion-label>
             </div>
           </ion-col>
           <ion-col>

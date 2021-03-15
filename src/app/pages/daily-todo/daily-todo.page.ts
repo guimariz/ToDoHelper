@@ -203,10 +203,9 @@ export class DailyTodoPage implements OnInit {
   }
 
   handleEventRest(event, task) {
-    console.log(event);
     if(event.action === 'done') {
       this.isRest = false;
-      task.status = 'doing'; 
+      task.status = 'doing';
     }
   }
 }
