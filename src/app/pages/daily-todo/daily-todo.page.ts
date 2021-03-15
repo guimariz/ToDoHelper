@@ -1,3 +1,4 @@
+import { HttpHeaders } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActionSheetController, AlertController, ToastController } from '@ionic/angular';
 import { TodoService } from 'src/app/services/todo.service';
@@ -17,11 +18,29 @@ export class DailyTodoPage implements OnInit {
   isRest : boolean = false;
 
   constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController, private todoService : TodoService) {
-    let taskJson = localStorage.getItem('taskDb');
+    // let taskJson = localStorage.getItem('taskDb');
 
-    if (taskJson) {
-      this.tasks = JSON.parse(taskJson);
-    }
+    // if (taskJson) {
+    //   this.tasks = JSON.parse(taskJson);
+    // }
+    this.loadTasks();
+  }
+
+  loadTasks() {
+    this.todoService.list()
+    .then(async (res : any[]) => {
+      this.tasks = res;
+    })
+    .catch(async (err) => {
+      console.error(err);
+      const toast = await this.toastCtrl.create({
+        message : 'Algo deu errado ao exibir as tasks!',
+        duration : 2000,
+        position : 'top',
+      });
+
+      toast.present();
+    });
   }
 
   ngOnInit() {
@@ -114,9 +133,17 @@ export class DailyTodoPage implements OnInit {
         });
 
         toast.present();
+        this.loadTasks();
       })
-      .catch((err) => {
+      .catch(async (err) => {
         console.error(err);
+        const toast = await this.toastCtrl.create({
+          message : 'Algo deu errado ao adicionar a task!',
+          duration : 2000,
+          position : 'top',
+        });
+
+        toast.present();
       });
     // this.updateLocalStorage();
   } 
@@ -168,7 +195,28 @@ export class DailyTodoPage implements OnInit {
         text: 'Editar',
         icon: 'create',
         handler: () => {
-          this.updateTask(task);
+          
+        this.todoService.update(task)
+        .then(async (res) => {
+          console.log(res);
+          const toast = await this.toastCtrl.create({
+            message : 'Task editada com sucesso!',
+            duration : 2000,
+            position : 'top',
+          });
+
+          toast.present();
+        })
+        .catch(async (err) => {
+          console.error(err);
+          const toast = await this.toastCtrl.create({
+            message : 'Algo deu errado ao editar a task!',
+            duration : 2000,
+            position : 'top',
+          });
+
+          toast.present();
+  });
         }
       },
       {
@@ -183,14 +231,32 @@ export class DailyTodoPage implements OnInit {
   }
 
   deleteTask(task : any) {
-    this.tasks = this.tasks.filter(taskArray => task != taskArray);
-    this.updateLocalStorage();
-    if(this.totalTasks > 0) { this.totalTasks-- }
-    if(task.status==='done') { this.doneTasks++ }
-  }
+    // this.tasks = this.tasks.filter(taskArray => task != taskArray);
+    // this.updateLocalStorage();
+    // if(this.totalTasks > 0) { this.totalTasks-- }
+    // if(task.status==='done') { this.doneTasks++ }
+    this.todoService.delete(task.id)
+      .then(async (res) => {
+        console.log(res);
+        const toast = await this.toastCtrl.create({
+          message : 'Task excluída com sucesso!',
+          duration : 2000,
+          position : 'top',
+        });
 
-  updateTask(task) {
-    console.log('editando');
+        toast.present();
+        this.loadTasks();
+      })
+      .catch(async (err) => {
+        console.error(err);
+        const toast = await this.toastCtrl.create({
+          message : 'Algo deu errado ao excluir a task!',
+          duration : 2000,
+          position : 'top',
+        });
+
+        toast.present();
+      });
   }
 
   handleEventTask(event, task) {
