@@ -9,7 +9,17 @@
 
 <ion-content>
   <ion-list>
-    <h3>ToDos Diários:</h3> <p>5/7</p>
-    <h3>ToDo Ranking:</h3> <p>80%</p>
+    <ion-list>
+      <h3>ToDos Diários:</h3> <p>{{doneTasks}}/{{totalTasks}}</p>
+    </ion-list>
+    <ion-list *ngIf="rankingTodo">
+      <h3>ToDo Ranking:</h3> <p>{{rankingTodo.toFixed(2)}}%</p>
+    </ion-list>
+    <ion-list *ngIf="!rankingTodo">
+      <h3>ToDo Ranking:</h3> <p>0%</p> 
+    </ion-list>
+    <ion-list>
+      <h3>ToDos Mensais:</h3> <p>{{allDone}}/{{allTotal}}</p>
+    </ion-list>
   </ion-list>
 </ion-content>

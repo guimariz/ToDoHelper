@@ -1,4 +1,3 @@
-import { HttpHeaders } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActionSheetController, AlertController, ToastController } from '@ionic/angular';
 import { TodoService } from 'src/app/services/todo.service';
@@ -17,6 +16,7 @@ export class DailyTodoPage implements OnInit {
   doneTasks : number = 0;
   isRest : boolean = false;
   click : boolean = false;
+  teste : boolean = false;
 
   constructor(private alertCtrl : AlertController, private toastCtrl : ToastController, private actionSheetCtrl : ActionSheetController, private todoService : TodoService) {
     // let taskJson = localStorage.getItem('taskDb');
@@ -32,14 +32,14 @@ export class DailyTodoPage implements OnInit {
 
   loadTasks() {
     this.todoService.list()
-    .then(async (res : any[]) => {
-      this.tasks = res;
-      this.totalTasks = res.length;
-      this.showDoneTasks();
-    })
-    .catch(async (err) => {
-      console.error(err);
-    });
+      .then(async (res : any[]) => {
+        this.tasks = await res;
+        this.totalTasks = await res.length;
+        this.showDoneTasks();
+      })
+      .catch(async (err) => {
+        console.error(err);
+      });
   }
 
   showDoneTasks() {
@@ -108,28 +108,109 @@ export class DailyTodoPage implements OnInit {
     });
     await alert.present();
   }
+
+  async showEdit(task){
+    const alert = await this.alertCtrl.create({
+      header: 'Editar uma task',
+      inputs: [
+        {
+          name: 'taskName',
+          type: 'text',
+          placeholder: 'Nome da task',
+          value: task.taskName
+        },
+        {
+          name: 'taskStart',
+          type: 'time',
+          placeholder: 'Horário de Início',
+          min: 0,
+          value: task.taskStart
+        },
+        {
+          name: 'taskFinal',
+          type: 'time',
+          placeholder: 'Horário final',
+          min: 0,
+          value:task.taskFinal
+        },
+        {
+          name: 'taskTimer',
+          type: 'number',
+          placeholder: 'Execução (minutos) Indicado 50',
+          min: 0,
+          value: task.taskTimer
+        },
+        {
+          name: 'restTimer',
+          type: 'number',
+          placeholder: 'Descanso (minutos) Indicado 10',
+          min: 0,
+          value: task.restTimer
+        }
+        
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'dark',
+          handler: () => {
+            console.log('clicked cancel');
+          }
+        },
+        {
+          text: 'Editar',
+          handler: (form => {
+            this.update(task.id, form.taskName, form.taskStart, form.taskFinal, form.taskTimer, form.restTimer);
+          })
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async update(id, taskName : string, taskStart : string , taskFinal : string, taskTimer : number, restTimer : number) {
+
+      let task = { id, taskName, status: 'pause', open: false, taskStart, taskFinal, taskTimer, restTimer, isReady: true}; 
+      this.todoService.update(task)
+      .then(async(res : any) => {
+        this.todoService.updateMensais(res.id, false, true);
+        this.loadTasks();
+        console.log('Task editada');
+        const toast = await this.toastCtrl.create({
+          message : 'Task editada com sucesso!',
+          duration : 2000,
+          position : 'top',
+        });
+  
+        toast.present();
+      })
+      .catch(async(err) => {
+        console.log(err);
+        const toast = await this.toastCtrl.create({
+          message : 'Algo deu errado ao editar a task!',
+          duration : 2000,
+          position : 'top',
+        });
+  
+        toast.present();
+      })
+        
+  }
+
   
   async add(taskName : string, taskStart : string , taskFinal : string, taskTimer : number, restTimer : number) {
-    //validar se o usuário preencheu
-    console.log(taskName);
-    if (!taskName.trim().length) {
-      const toast = await this.toastCtrl.create({
-        message : 'Informe o que deseja fazer',
-        duration : 2000,
-        position : 'top',
-      });
-      
-      toast.present();
-      return;
-    }
     
-    let task = { taskName, status: 'pause', open: false, taskStart, taskFinal, taskTimer, restTimer, isReady: true };
-    
+    let task = { taskName, status: 'pause', open: false, taskStart, taskFinal, taskTimer, restTimer, isReady: true, allDone: 0, allTotal: 1};
+
     this.todoService.add(task)
-    .then(async (res) => {
+    .then(async (res : any) => {
       console.log('Task adicionada');
       this.tasks.push(res);
+      console.log(res);
+      this.todoService.addMensais(res.id, false, true);
       this.validateTask(res);
+      this.loadTasks();
       const toast = await this.toastCtrl.create({
         message : 'Task adicionada com sucesso!',
         duration : 2000,
@@ -146,7 +227,6 @@ export class DailyTodoPage implements OnInit {
         position : 'top',
       });
 
-      this.loadTasks();
       
       toast.present();
     });
@@ -173,30 +253,39 @@ export class DailyTodoPage implements OnInit {
      });
 
   }
-  // updateLocalStorage() {
-    //   localStorage.setItem('taskDb', JSON.stringify(this.tasks));
-    //   if (!this.tasks) {
-      //     this.totalTasks = 0;
-      //     this.doneTasks = 0;
-  //   }
-  // }
-
-
 
   async onClick(task : any) {
 
+
     task.open = !task.open;
 
-    task.status = 'doing';
-    this.isRest = false;
     this.validateTask(task);
-
+    
     // this.updateLocalStorage();
     this.todoService.update(task)
     .then((res) => { console.log('Status atualizado') })
     .catch((err) => { 
       console.log(err) 
     });
+    
+    if(!task.isReady) {
+      task.status = 'done';
+      this.todoService.update(task)
+      .then((res) => { 
+        this.showDoneTasks();
+        this.loadTasks();
+      })
+      .catch((err) => { console.log(err) });
+      this.todoService.updateMensais(task.id, true, true)
+      .then((res) => {
+        console.log(res);
+        console.log('----------------');
+      })
+      .catch((err) => {console.log(err)});
+    } else {      
+      task.status = 'doing';
+      this.isRest = false;
+    }
     
   }
   
@@ -216,10 +305,6 @@ export class DailyTodoPage implements OnInit {
     });
   }
 
-  startTimer() {
-    
-  }
-
   async taskOption(task : any) {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'O que deseja fazer?',
@@ -234,30 +319,9 @@ export class DailyTodoPage implements OnInit {
       {
         text: 'Editar',
         icon: 'create',
-        handler: () => {
-          
-        this.todoService.update(task)
-        .then(async (res) => {
-          console.log('Task editada');
-          const toast = await this.toastCtrl.create({
-            message : 'Task editada com sucesso!',
-            duration : 2000,
-            position : 'top',
-          });
-
-          toast.present();
-        })
-        .catch(async (err) => {
-          console.error(err);
-          
-          const toast = await this.toastCtrl.create({
-            message : 'Algo deu errado ao editar a task!',
-            duration : 2000,
-            position : 'top',
-          });
-
-          toast.present();
-  });
+        handler: ()=> {
+          this.showEdit(task);
+          // this.add(form.taskName, form.taskStart, form.taskFinal, form.taskTimer, form.restTimer);
         }
       },
       {
@@ -299,9 +363,32 @@ export class DailyTodoPage implements OnInit {
       });
   }
 
-  async handleEventTask(event, task) {
+  deleteAllTasks() {
+    this.todoService.deleteAllTasks()
+      .then(async (res) => {
+        console.log('Tasks excluídas');
+        const toast = await this.toastCtrl.create({
+          message : 'Todas as task foram excluídas com sucesso!',
+          duration : 2000,
+          position : 'top',
+        });
 
-    console.log(event);
+        toast.present();
+        this.loadTasks();
+      })
+      .catch(async (err) => {
+        console.error(err);
+        const toast = await this.toastCtrl.create({
+          message : 'Algo deu errado ao excluir as tasks!',
+          duration : 2000,
+          position : 'top',
+        });
+
+        toast.present();
+      });
+  }
+
+  async handleEventTask(event, task) {
 
     this.validateTask(task);
 
@@ -312,6 +399,7 @@ export class DailyTodoPage implements OnInit {
         duration : 2000,
         position : 'top',
       });
+      toast.present();
       this.todoService.update(task)
       .then((res) => { 
         this.showDoneTasks();
@@ -321,9 +409,9 @@ export class DailyTodoPage implements OnInit {
         
         console.log(err)
         });
-      
-      toast.present();
-      
+      this.todoService.updateMensais(task.id, true, true)
+        .then((res) => {console.log(res)})
+        .catch((err) => {console.log(err)});
     } else if (event.action ==='done' && task.isReady) {
       this.isRest = true;
       task.status = 'pause';
@@ -332,7 +420,7 @@ export class DailyTodoPage implements OnInit {
       task.status = 'doing';
     }
     this.todoService.update(task)
-    .then((res) => { console.log('Descanso finalizado') })
+    .then((res) => { console.log('Execução finalizada') })
     .catch((err) => { 
       
       console.log(err) 
@@ -342,23 +430,25 @@ export class DailyTodoPage implements OnInit {
   async handleEventRest(event, task) {
 
     this.validateTask(task);
-    
+
     if(event.action === 'done' && !task.isReady) {
-      
       task.status = 'done';
       const toast = await this.toastCtrl.create({
         message : 'Parabéns, você concluiu a task!',
         duration : 2000,
         position : 'top',
       });
+      toast.present();
       this.todoService.update(task)
       .then((res) => { 
         this.showDoneTasks();
         console.log('Execução finalizada');
       })
       .catch((err) => { console.log(err) });
+      this.todoService.updateMensais(task.id, true, true)
+        .then((res) => {console.log(res)})
+        .catch((err) => {console.log(err)});
       
-      toast.present();
     } else if (event.action ==='done' && task.isReady) {
       
       this.isRest = false;
@@ -375,7 +465,13 @@ export class DailyTodoPage implements OnInit {
   resetTasks() {
 
     this.click = !this.click;
-    console.log(this.click);
+    if(this.click) {
+      this.todoService.resetTasks()
+        .then((res) => { console.log(res) })
+        .catch((err) => { console.error(err) });
+
+      this.loadTasks();
+    }
 
     let d = new Date();
 
@@ -387,10 +483,28 @@ export class DailyTodoPage implements OnInit {
 
     if (data1 === data2) { 
       this.todoService.resetTasks()
-      .then((res) => { console.log(res) })
-      .catch((err) => { console.error(err) });
+        .then((res) => { console.log(res) })
+        .catch((err) => { console.error(err) });
+      
+        this.loadTasks();
     }
 
+  }
+
+  testeDone(task) {
+    task.status = 'done';
+    this.todoService.update(task)
+      .then((res) => { 
+        this.showDoneTasks();
+        this.loadTasks();
+        this.todoService.updateMensais(task.id, true, true)
+          .then((res) => {
+            console.log(res);
+            console.log('----------------');
+          })
+          .catch((err) => {console.log(err)});
+      })
+      .catch((err) => { console.log(err) });
   }
 
 }

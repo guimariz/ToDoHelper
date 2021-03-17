@@ -52,12 +52,23 @@
               <ion-label *ngIf="task.status==='pause' && isRest"><countdown #countRest [config]="{leftTime: task.restTimer}" (event)="handleEventRest($event, task)"></countdown></ion-label>
             </div>
           </ion-col>
+          <ion-button expand="full" color="danger" (click)="testeDone(task)">
+            Teste Done
+          </ion-button>
         </ion-row>
       </ion-grid>
       <ion-icon slot="start" name="play-circle" (click)="onTimerClick(task); countTask.resume()" *ngIf="task.status === 'pause'"></ion-icon>
       <ion-icon slot="start" name="pause-circle" (click)="onTimerClick(task); countTask.pause()" *ngIf="task.status === 'doing'"></ion-icon>
     </ion-item>
   </ion-list>
+
+  <ion-button expand="full" (click)="resetTasks()">
+    Resetar Tasks Diárias 
+  </ion-button>
+  <ion-button expand="full" color="danger" (click)="deleteAllTasks()">
+    Excluir Tasks Diárias 
+  </ion-button>
+
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="showAdd()" color="primary">
